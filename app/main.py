@@ -12,12 +12,9 @@ Run as CLI:
 from __future__ import annotations
 
 import argparse
-import asyncio
 import os
 import subprocess
-import sys
 import tempfile
-import textwrap
 from pathlib import Path
 
 import cv2
@@ -61,13 +58,6 @@ find_bold_font = find_font  # alias for backwards compatibility
 # --------------------------------------------------------------------------
 
 
-async def _edge_tts_save(text: str, voice: str, rate: str, out_mp3: Path) -> None:
-    import edge_tts  # lazy import so CLI --help works without it
-
-    communicate = edge_tts.Communicate(text, voice, rate=rate)
-    await communicate.save(str(out_mp3))
-
-
 def synthesize_ukrainian_tts(
     text: str, out_mp3: Path, voice: str = "uk-UA-OstapNeural", rate_percent: int = 0
 ) -> str:
@@ -76,18 +66,10 @@ def synthesize_ukrainian_tts(
     Edge-TTS (Microsoft neural voices) is much more natural and free, but needs
     internet. gTTS is the offline-tolerant fallback.
     """
-    rate = f"{rate_percent:+d}%"  # edge-tts wants e.g. "+0%", "-10%"
-    try:
-        asyncio.run(_edge_tts_save(text, voice, rate, out_mp3))
-        if out_mp3.stat().st_size > 1000:
-            return "edge-tts"
-        raise RuntimeError("edge-tts produced an empty file")
-    except Exception as e:
-        print(f"[tts] edge-tts failed ({e}), falling back to gTTS...", file=sys.stderr)
-        from gtts import gTTS
+    from gtts import gTTS
 
-        gTTS(text=text, lang="uk").save(str(out_mp3))
-        return "gtts"
+    gTTS(text=text, lang="uk").save(str(out_mp3))
+    return "gtts"
 
 
 def audio_duration_sec(mp3_path: Path) -> float:
