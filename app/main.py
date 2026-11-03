@@ -5,13 +5,10 @@ is synthesized, and an MP4 is rendered with the same text BIG, REGULAR and CENTE
 
 Run as UI:
     streamlit run main.py
-Run as CLI:
-    uv run python main.py --text "Привіт! Це тестове відео." --out out.mp4
 """
 
 from __future__ import annotations
 
-import argparse
 import os
 import subprocess
 import tempfile
@@ -378,75 +375,5 @@ def run_ui() -> None:
             )
 
 
-# --------------------------------------------------------------------------
-# CLI
-# --------------------------------------------------------------------------
-
-
-def run_cli(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(
-        description="Ukrainian text -> video with natural TTS + big regular centered text."
-    )
-    ap.add_argument(
-        "--text", "-t", required=False, help="Ukrainian text to speak and display."
-    )
-    ap.add_argument(
-        "--file", "-f", required=False, help="Read text from a .txt file (UTF-8)."
-    )
-    ap.add_argument(
-        "--out", "-o", default="ukrainian_video.mp4", help="Output MP4 path."
-    )
-    ap.add_argument(
-        "--voice",
-        default="uk-UA-OstapNeural",
-        help="Edge voice (uk-UA-OstapNeural / uk-UA-PolinaNeural).",
-    )
-    ap.add_argument(
-        "--rate", type=int, default=0, help="Speech rate percent, e.g. -10, +10."
-    )
-    ap.add_argument(
-        "--format", choices=["vertical", "square", "horizontal"], default="vertical"
-    )
-    ap.add_argument("--top", default="#0f2027", help="Background gradient top hex.")
-    ap.add_argument(
-        "--bottom", default="#2c5364", help="Background gradient bottom hex."
-    )
-    ap.add_argument("--font-color", default="white")
-    ap.add_argument("--max-font", type=int, default=110)
-    args = ap.parse_args(argv)
-
-    text = args.text or ""
-    if args.file:
-        text = Path(args.file).read_text(encoding="utf-8")
-    if not text.strip():
-        ap.error("Provide --text or --file with non-empty content.")
-    sizes = {
-        "vertical": (1080, 1920),
-        "square": (1080, 1080),
-        "horizontal": (1920, 1080),
-    }
-    info = make_video(
-        text,
-        args.out,
-        voice=args.voice,
-        rate_percent=args.rate,
-        size=sizes[args.format],
-        top_hex=args.top,
-        bottom_hex=args.bottom,
-        font_color=args.font_color,
-        max_font_size=args.max_font,
-    )
-    print(info)
-    return 0
-
-
 if __name__ == "__main__":
-    try:
-        import streamlit as st  # noqa
-
-        if st.runtime.exists():
-            run_ui()
-        else:
-            raise SystemExit(run_cli())
-    except ImportError:
-        raise SystemExit(run_cli())
+    run_ui()
