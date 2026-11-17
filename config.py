@@ -5,6 +5,8 @@ Nothing here does any work - these are just values that the other files read.
 Change a number here and the whole app (frame, video, speech) follows.
 """
 
+from pathlib import Path
+
 # ---------------------------------------------------------------------------
 # Video format
 # ---------------------------------------------------------------------------
@@ -38,22 +40,30 @@ VERSE_SIDE_MARGIN = 110
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
-# The first file in this list that exists on the machine is used.
-# Windows, Linux and macOS all store fonts in different places, and the app may
-# be hosted on a Linux server, so we try several paths.
+# IMPORTANT: Ukrainian letters need a font that contains Cyrillic.
+# Many minimal Linux servers (and Streamlit Community Cloud) ship with NO font
+# that has Cyrillic, and Pillow then draws empty boxes for every letter.
+#
+# Therefore we bundle DejaVu Sans in this repository and use it FIRST.
+# The folder below is relative to this file, so it works the same way locally
+# and after deployment.
+BUNDLED_FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"
+
+# If the bundled font is ever missing, these are tried as a fallback.
+# Windows, Linux and macOS all store fonts in different places.
 FONT_CANDIDATES = (
+    str(BUNDLED_FONT),
     # Windows
     "C:/Windows/Fonts/DejaVuSans.ttf",
     "C:/Windows/Fonts/arial.ttf",
     # Linux (typical for Debian/Ubuntu hosting)
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf",
     # macOS
     "/System/Library/Fonts/Supplemental/Arial.ttf",
     "/Library/Fonts/Arial.ttf",
 )
-
-# DejaVu Sans and Arial both contain Ukrainian (Cyrillic) letters.
 
 # ---------------------------------------------------------------------------
 # Text to speech

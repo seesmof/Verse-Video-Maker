@@ -17,7 +17,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from config import DEFAULT_RATE, DEFAULT_VOICE, SPEECH_RATES, VOICES
+from config import DEFAULT_RATE, SPEECH_RATES, VOICES
+from frame import font_is_broken
 from tts import make_speech
 from video import build_video
 
@@ -30,6 +31,14 @@ st.set_page_config(
 
 st.title("Bible verse video")
 st.caption("Український текст вірша → вертикальне відео 9:16 з озвучкою.")
+
+# A deployment without a Cyrillic font renders letters as empty boxes. Say so
+# immediately instead of letting the user produce broken videos.
+if font_is_broken():
+    st.error(
+        "Шрифт без українських літер. Перевір, що папка `fonts/DejaVuSans.ttf` "
+        "є в репозиторії та потрапила в деплой."
+    )
 
 # ---------------------------------------------------------------------------
 # 1. The form

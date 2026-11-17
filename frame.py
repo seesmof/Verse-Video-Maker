@@ -26,21 +26,55 @@ from config import (
 MAX_TEXT_HEIGHT = int(VIDEO_HEIGHT * 0.75)
 
 
-def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    """Return a font of the given size that can draw Ukrainian letters.
+def _has_cyrillic(font) -> bool:
+    """Check that a font really can draw Ukrainian letters.
 
-    The first existing file from FONT_CANDIDATES is used. If none is found
-    (unlikely), Pillow's built-in font is the last resort.
+    A font without Cyrillic silently draws the same empty box for every
+    Cyrillic letter, which is exactly the bug we are fixing. We render two
+    different Ukrainian letters and compare the pixels: if the images are
+    identical, the font has no Cyrillic and must not be used.
+    """
+    box = 120
+    rendered: list[bytes] = []
+
+    for letter in "БІ":
+        image = Image.new("L", (box, box), 0)
+        ImageDraw.Draw(image).text((5, 5), letter, font=font, fill=255)
+        rendered.append(image.tobytes())
+
+    return rendered[0] != rendered[1]
+
+
+def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    """Return the first available font that can draw Ukrainian letters.
+
+    Files are tried in the order given by FONT_CANDIDATES; the bundled font in
+    `fonts/` is first, so this works on Streamlit Cloud too.
     """
     for candidate in FONT_CANDIDATES:
-        if Path(candidate).exists():
-            try:
-                return ImageFont.truetype(candidate, size)
-            except OSError:
-                # File exists but cannot be loaded - just try the next one.
-                continue
+        if not Path(candidate).exists():
+            continue
+        try:
+            font = ImageFont.truetype(candidate, size)
+        except OSError:
+            # File exists but cannot be loaded - just try the next one.
+            continue
+        if _has_cyrillic(font):
+            return font
 
+    # Pillow's built-in font has no Cyrillic, so this is a loud last resort:
+    # the text will render, but it must be treated as a broken deployment.
     return ImageFont.load_default(size=size)
+
+
+def font_is_broken() -> bool:
+    """True if no usable Cyrillic font was found on this machine.
+
+    The app calls this once at startup to show a clear message instead of
+    silently rendering empty boxes.
+    """
+    font = _load_font(VERSE_FONT_MAX)
+    return isinstance(font, ImageFont.ImageFont)
 
 
 def _wrap(text: str, font, draw: ImageDraw.ImageDraw, max_width: int) -> list[str]:
