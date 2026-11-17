@@ -15,12 +15,24 @@ Run it with:  streamlit run app.py
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import streamlit as st
 
 from config import DEFAULT_RATE, SPEECH_RATES, VOICES
 from frame import font_is_broken
 from tts import make_speech
 from video import build_video
+
+
+def video_filename() -> str:
+    """Build a download filename like `202611172043.mp4`.
+
+    The name is a local timestamp down to the minute:
+    year, month, day, hour, minute. It sorts chronologically and never needs
+    cleanup.
+    """
+    return f"{datetime.now().strftime('%Y%m%d%H%M')}.mp4"
 
 # Page settings must be the first Streamlit call.
 st.set_page_config(
@@ -55,7 +67,9 @@ voice_label = st.selectbox("Голос", list(VOICES), index=0)
 # st.select_slider gives a slider with a few fixed stops - no free typing.
 # Options come from config so the list stays in one place.
 initial_rate = SPEECH_RATES.index(DEFAULT_RATE)
-rate = st.select_slider("Темп озвучення", options=SPEECH_RATES, value=SPEECH_RATES[initial_rate])
+rate = st.select_slider(
+    "Темп озвучення", options=SPEECH_RATES, value=SPEECH_RATES[initial_rate]
+)
 
 # The button is disabled while the box is empty, so we never run with no text.
 generate = st.button(
@@ -86,7 +100,9 @@ if generate:
         with st.spinner("Малюю кадр і збираю відео…"):
             # The audio file already sits in its own temporary folder, so the
             # video files are written next to it.
-            video_path, frame_path, duration = build_video(clean_verse, audio_path, audio_path.parent)
+            video_path, frame_path, duration = build_video(
+                clean_verse, audio_path, audio_path.parent
+            )
 
         # --- Step 3: result ------------------------------------------------
         st.video(str(video_path))
@@ -98,7 +114,7 @@ if generate:
         st.download_button(
             "Завантажити відео (MP4)",
             data=mp4_bytes,
-            file_name="bible-verse-uk.mp4",
+            file_name=video_filename(),
             mime="video/mp4",
             type="primary",
             icon=":material/download:",
