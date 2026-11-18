@@ -82,4 +82,3 @@ VOICES = {
 # Default selected voice and speaking speed ("+0%" = normal, "-10%" = slower).
 DEFAULT_VOICE = VOICE_OSTAP
 DEFAULT_RATE = "+0%"
-SPEECH_RATES = ["-10%", "+0%", "+10%"]

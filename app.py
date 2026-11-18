@@ -2,7 +2,7 @@
 Bible verse video - the web page.
 
 This is the only file Streamlit runs. It contains the whole user interface:
-one text box, one voice picker, one speed slider, one button.
+one text box, one voice picker, one button.
 
 Everything else lives in small helper files:
     config.py  -> all the numbers and names
@@ -19,7 +19,7 @@ from datetime import datetime
 
 import streamlit as st
 
-from config import DEFAULT_RATE, SPEECH_RATES, VOICES
+from config import DEFAULT_RATE, VOICES
 from frame import font_is_broken
 from tts import make_speech
 from video import build_video
@@ -64,13 +64,6 @@ verse = st.text_area(
 # VOICES maps a readable label ("Polina (жіночий)") to a technical voice name.
 voice_label = st.selectbox("Голос", list(VOICES), index=0)
 
-# st.select_slider gives a slider with a few fixed stops - no free typing.
-# Options come from config so the list stays in one place.
-initial_rate = SPEECH_RATES.index(DEFAULT_RATE)
-rate = st.select_slider(
-    "Темп озвучення", options=SPEECH_RATES, value=SPEECH_RATES[initial_rate]
-)
-
 # The button is disabled while the box is empty, so we never run with no text.
 generate = st.button(
     "Створити відео",
@@ -91,7 +84,7 @@ if generate:
     try:
         # --- Step 1: speech ------------------------------------------------
         with st.spinner("Озвучую текст українською… (10–30 с)"):
-            audio_path = make_speech(clean_verse, VOICES[voice_label], rate)
+            audio_path = make_speech(clean_verse, VOICES[voice_label], DEFAULT_RATE)
 
         # Let the user listen to the voice-over right away.
         st.audio(str(audio_path), format="audio/mp3")
